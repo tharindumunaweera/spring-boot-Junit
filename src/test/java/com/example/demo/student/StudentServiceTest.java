@@ -1,6 +1,7 @@
 package com.example.demo.student;
 
 import com.example.demo.student.exception.BadRequestException;
+import com.example.demo.student.exception.StudentNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -13,7 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +68,28 @@ class StudentServiceTest {
     }
 
     @Test
-    @Disabled
     void deleteStudent() {
+
+        long id = 10;
+        given(studentRepository.existsById(id))
+                .willReturn(true);
+        // when
+        underTest.deleteStudent(id);
+
+        // then
+        verify(studentRepository).deleteById(id);
+
+    }
+
+    @Test
+    void deleteWhenIdIsNotExist() {
+        long id = 10;
+        given(studentRepository.existsById(id))
+                .willReturn(false);
+
+        assertThatThrownBy(() -> underTest.deleteStudent(id)).isInstanceOf(StudentNotFoundException.class)
+                .hasMessageContaining("Student with id " + id + " does not exists");
+
+        verify(studentRepository, never()).deleteById(any());
     }
 }
